@@ -1,42 +1,50 @@
 package variant
 
 import (
-	"time"
-	"io/ioutil"
 	"encoding/json"
-	"os"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"time"
 )
 
 const (
 	Release = "release"
-	Alpha = "alpha"
-	Beta = "beta"
+	Alpha   = "alpha"
+	Beta    = "beta"
 )
 
 type Versions struct {
-	Current *Version
-	Versions []*Version
+	Current *Version   `json:"current"`
+	History []*Version `json:"versions"`
 }
 
 func (v *Versions) Len() int {
-	return len(v.Versions)
+	return len(v.History)
 }
 
 func (v *Versions) Append(vers *Version) {
-	v.Versions = append(v.Versions, vers)
+	v.History = append(v.History, vers)
 }
 
 type Version struct {
-	Major int
-	Minor int
-	Date time.Time
-	Description string
-	ReleaseType string
+	Major       int       `json:"major"`
+	Minor       int       `json:"minor"`
+	Date        time.Time `json:"date"`
+	Description string    `json:"description"`
+	ReleaseType string    `json:"release_type"`
+}
+
+func (v *Version) BumpMajor() {
+	v.Major += 1
+}
+
+func (v *Version) BumpMinor() {
+	v.Minor += 1
 }
 
 func NewVersion(description, releaseType string) *Version {
-	return &Version{Description: description, ReleaseType:releaseType, Date: time.Now()}
+	return &Version{Description: description, ReleaseType: releaseType, Date: time.Now()}
 }
 
 func (v *Version) VersionString() string {
@@ -59,6 +67,10 @@ func (v *Versions) Save(path string) error {
 	}
 	enc := json.NewEncoder(f)
 	return enc.Encode(v)
+}
+
+func (v *Versions) JSON() ([]byte, error) {
+	return json.Marshal(v)
 }
 
 func (v *Versions) NewMajor(description, releaseType string) {
